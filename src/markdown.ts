@@ -139,7 +139,14 @@ export function findCloudImageEmbeds(content: string, baseUrl: string): CloudIma
 }
 
 export function toMarkdownImage(altText: string, target: string): string {
-  return `![${altText}](<${target}>)`;
+  const shouldWrapInAngleBrackets =
+    target.includes(" ") || target.includes("(") || target.includes(")");
+
+  if (shouldWrapInAngleBrackets) {
+    return `![${altText}](<${target}>)`;
+  }
+
+  return `![${altText}](${target})`;
 }
 
 export function toRelativeLink(fromFile: TFile, absoluteTargetPath: string): string {
