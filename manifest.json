@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "cloudflare-imgbed-upload",
+	"name": "Cloudflare ImgBed Upload",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
+	"description": "Upload images to Cloudflare ImgBed.",
+	"author": "QGlint",
+	"authorUrl": "https://qglint.github.io/",
 	"fundingUrl": "https://obsidian.md/pricing",
 	"isDesktopOnly": false
 }
