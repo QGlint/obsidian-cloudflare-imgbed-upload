@@ -1,7 +1,7 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import type MyPlugin from "./main";
+import type CloudflareImgBedPlugin from "./main";
 
-export interface MyPluginSettings {
+export interface PluginSettings {
 	baseUrl: string;
 	apiToken: string;
 	autoUploadOnPaste: boolean;
@@ -9,7 +9,7 @@ export interface MyPluginSettings {
 	deleteRemoteWhenReferenceRemoved: boolean;
 }
 
-export const DEFAULT_SETTINGS: MyPluginSettings = {
+export const DEFAULT_SETTINGS: PluginSettings = {
 	baseUrl: "",
 	apiToken: "",
 	autoUploadOnPaste: false,
@@ -17,10 +17,10 @@ export const DEFAULT_SETTINGS: MyPluginSettings = {
 	deleteRemoteWhenReferenceRemoved: false,
 };
 
-export class CloudflareImgBedSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+export class CloudflareImgBedSettingsTab extends PluginSettingTab {
+	plugin: CloudflareImgBedPlugin;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: CloudflareImgBedPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -28,14 +28,14 @@ export class CloudflareImgBedSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
-		containerEl.createEl("h2", { text: "Cloudflare ImgBed 配置" });
+
+		new Setting(containerEl).setName("Cloudflare image host").setHeading();
 
 		new Setting(containerEl)
-			.setName("服务地址")
-			.setDesc("Cloudflare ImgBed 服务地址，例如：https://your.domain")
+			.setName("Service address")
+			.setDesc("Enter the service address.")
 			.addText((text) =>
 				text
-					.setPlaceholder("https://your.domain")
 					.setValue(this.plugin.settings.baseUrl)
 					.onChange(async (value) => {
 						this.plugin.settings.baseUrl = value.trim();
@@ -44,12 +44,11 @@ export class CloudflareImgBedSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("API Token")
-			.setDesc("用于上传和删除的 Bearer Token")
+			.setName("API token")
+			.setDesc("Bearer token used for upload and delete operations")
 			.addText((text) => {
 				text.inputEl.type = "password";
 				return text
-					.setPlaceholder("token")
 					.setValue(this.plugin.settings.apiToken)
 					.onChange(async (value) => {
 						this.plugin.settings.apiToken = value.trim();
@@ -58,8 +57,8 @@ export class CloudflareImgBedSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName("自动上传（粘贴图片后）")
-			.setDesc("检测笔记变更并自动上传本地图片，随后替换为云端链接")
+			.setName("Auto upload after paste")
+			.setDesc("Detect note changes, upload local images automatically, then replace with cloud links")
 			.addToggle((toggle) =>
 				toggle.setValue(this.plugin.settings.autoUploadOnPaste).onChange(async (value) => {
 					this.plugin.settings.autoUploadOnPaste = value;
@@ -68,8 +67,8 @@ export class CloudflareImgBedSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("上传后删除本地源文件")
-			.setDesc("开启后，若图片不再被任何 Markdown 文件引用，将删除本地源文件")
+			.setName("Delete local source after upload")
+			.setDesc("Delete local source files after upload if they are no longer referenced in Markdown files")
 			.addToggle((toggle) =>
 				toggle.setValue(this.plugin.settings.deleteLocalAfterUpload).onChange(async (value) => {
 					this.plugin.settings.deleteLocalAfterUpload = value;
@@ -78,8 +77,8 @@ export class CloudflareImgBedSettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("删除引用时删除云端文件")
-			.setDesc("当云端图片链接在全库中不再被引用时，自动删除云端文件")
+			.setName("Delete cloud file when references are removed")
+			.setDesc("Automatically delete cloud files when cloud image links are no longer referenced in the vault")
 			.addToggle((toggle) =>
 				toggle
 					.setValue(this.plugin.settings.deleteRemoteWhenReferenceRemoved)
@@ -89,15 +88,15 @@ export class CloudflareImgBedSettingTab extends PluginSettingTab {
 					}),
 			);
 
-		containerEl.createEl("h3", { text: "命令说明" });
+		new Setting(containerEl).setName("Command descriptions").setHeading();
 		const commandList = containerEl.createEl("ul");
 		const items = [
-			"上传当前文件中的本地图片：扫描当前笔记，上传本地图片并替换链接。",
-			"上传当前文件夹中的本地图片：扫描当前笔记所在文件夹（含子目录）内所有笔记并替换链接。",
-			"上传并删除当前文件中的本地图片：执行上传替换后，删除无引用的本地图片。",
-			"上传并删除当前文件夹中的本地图片：执行文件夹范围上传替换后，删除无引用的本地图片。",
-			"下载当前文件中的云端图片到本地：下载到对应目录下的 attachment 文件夹并替换为本地链接。",
-			"下载当前文件夹中的云端图片到本地：下载到当前文件夹的 attachment 文件夹并替换为本地链接。",
+			"Upload local images in current file: scan the active note, upload local images, and replace links.",
+			"Upload local images in current folder: scan all notes in the active note folder (including subfolders) and replace links.",
+			"Upload and delete local images in current file: upload and replace, then delete unreferenced local images.",
+			"Upload and delete local images in current folder: upload and replace in folder scope, then delete unreferenced local images.",
+			"Download cloud images in current file: download to the attachment folder near the note and replace links with local paths.",
+			"Download cloud images in current folder: download to the folder attachment directory and replace links with local paths.",
 		];
 
 		for (const item of items) {

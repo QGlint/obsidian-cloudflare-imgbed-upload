@@ -1,9 +1,9 @@
 import { Notice, Plugin } from "obsidian";
 import { ImageSyncService } from "./service";
-import { DEFAULT_SETTINGS, CloudflareImgBedSettingTab, MyPluginSettings } from "./settings";
+import { CloudflareImgBedSettingsTab, DEFAULT_SETTINGS, PluginSettings } from "./settings";
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class CloudflareImgBedPlugin extends Plugin {
+	settings: PluginSettings;
 	private imageSyncService: ImageSyncService;
 
 	async onload() {
@@ -13,7 +13,7 @@ export default class MyPlugin extends Plugin {
 		await this.imageSyncService.initializeSnapshots();
 		this.imageSyncService.registerEvents();
 
-		this.addSettingTab(new CloudflareImgBedSettingTab(this.app, this));
+		this.addSettingTab(new CloudflareImgBedSettingsTab(this.app, this));
 		this.registerCommands();
 	}
 
@@ -22,7 +22,7 @@ export default class MyPlugin extends Plugin {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, (await this.loadData()) as Partial<MyPluginSettings>);
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, (await this.loadData()) as Partial<PluginSettings>);
 	}
 
 	async saveSettings() {

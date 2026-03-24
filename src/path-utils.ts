@@ -53,8 +53,8 @@ export function relativePath(fromDir: string, toPath: string): string {
     common += 1;
   }
 
-  const up = new Array(fromSegments.length - common).fill("..");
+  const up: string[] = Array.from({ length: fromSegments.length - common }, () => "..");
   const down = toSegments.slice(common);
-  const result = [...up, ...down].join("/");
+  const result = up.concat(down).join("/");
   return result.length === 0 ? "." : result;
 }

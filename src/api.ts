@@ -9,6 +9,26 @@ interface UploadResponseItem {
   src: string;
 }
 
+function createMultipartBody(
+  fileName: string,
+  binary: ArrayBuffer,
+): { boundary: string; body: ArrayBuffer } {
+  const boundary = `----obsidian-cloudflare-imgbed-${Date.now()}`;
+  const encoder = new TextEncoder();
+  const header = encoder.encode(
+    `--${boundary}\r\n`
+      + `Content-Disposition: form-data; name="file"; filename="${fileName}"\r\n`
+      + "Content-Type: application/octet-stream\r\n\r\n",
+  );
+  const footer = encoder.encode(`\r\n--${boundary}--\r\n`);
+  const fileBytes = new Uint8Array(binary);
+  const merged = new Uint8Array(header.length + fileBytes.length + footer.length);
+  merged.set(header, 0);
+  merged.set(fileBytes, header.length);
+  merged.set(footer, header.length + fileBytes.length);
+  return { boundary, body: merged.buffer };
+}
+
 export class CloudflareImgBedClient {
   constructor(private readonly baseUrl: string, private readonly token: string) {}
 
@@ -24,22 +44,24 @@ export class CloudflareImgBedClient {
 
   async uploadBinary(fileName: string, binary: ArrayBuffer): Promise<UploadResult> {
     const url = this.buildUrl("/upload");
-    const formData = new FormData();
-    const blob = new Blob([binary]);
-    formData.append("file", blob, fileName);
+    const { boundary, body } = createMultipartBody(fileName, binary);
 
-    const response = await fetch(url, {
+    const response = await requestUrl({
+      url,
       method: "POST",
-      headers: this.getHeaders(),
-      body: formData,
+      headers: {
+        ...this.getHeaders(),
+        "Content-Type": `multipart/form-data; boundary=${boundary}`,
+      },
+      body,
+      throw: false,
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Upload failed (${response.status}): ${text}`);
+    if (response.status >= 400) {
+      throw new Error(`Upload failed (${response.status}): ${response.text}`);
     }
 
-    const payload = (await response.json()) as UploadResponseItem[] | { data?: UploadResponseItem[] };
+    const payload = response.json as UploadResponseItem[] | { data?: UploadResponseItem[] };
     const item = Array.isArray(payload) ? payload[0] : payload.data?.[0];
     if (!item?.src) {
       throw new Error("Upload response does not contain src");
@@ -56,14 +78,15 @@ export class CloudflareImgBedClient {
       .join("/");
     const url = this.buildUrl(`/api/manage/delete/${encodedPath}`);
 
-    const response = await fetch(url, {
+    const response = await requestUrl({
+      url,
       method: "DELETE",
       headers: this.getHeaders(),
+      throw: false,
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`Delete failed (${response.status}): ${text}`);
+    if (response.status >= 400) {
+      throw new Error(`Delete failed (${response.status}): ${response.text}`);
     }
   }
 

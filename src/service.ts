@@ -2,7 +2,7 @@ import { App, Notice, TFile, debounce, normalizePath } from "obsidian";
 import { CloudflareImgBedClient } from "./api";
 import { findCloudImageEmbeds, findLocalImageEmbeds, toMarkdownImage, toRelativeLink, buildCloudUrl } from "./markdown";
 import { getFileName, getParentPath, joinPath } from "./path-utils";
-import type MyPlugin from "./main";
+import type CloudflareImgBedPlugin from "./main";
 import { ProcessResult, ScanScope } from "./types";
 
 export class ImageSyncService {
@@ -19,7 +19,7 @@ export class ImageSyncService {
     await this.uploadLocalImagesInFile(file, this.plugin.settings.deleteLocalAfterUpload);
   }, 1200, true);
 
-  constructor(private readonly plugin: MyPlugin, private readonly app: App) {}
+  constructor(private readonly plugin: CloudflareImgBedPlugin, private readonly app: App) {}
 
   async initializeSnapshots(): Promise<void> {
     const markdownFiles = this.app.vault.getMarkdownFiles();
@@ -230,7 +230,7 @@ export class ImageSyncService {
         }
         const sourceFile = this.app.vault.getAbstractFileByPath(sourcePath);
         if (sourceFile instanceof TFile) {
-          await this.app.vault.delete(sourceFile);
+          await this.app.fileManager.trashFile(sourceFile);
           result.deletedLocalCount += 1;
         }
       }
